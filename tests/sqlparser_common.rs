@@ -10414,7 +10414,7 @@ fn test_placeholder() {
         })
     );
 
-    let sql = "SELECT $fromage_français, :x, ?123";
+    let sql = "SELECT $fromage_français, :x, ?123, ${placeholder}";
     let ast = dialects.verified_only_select(sql);
     assert_eq!(
         ast.projection,
@@ -10427,6 +10427,9 @@ fn test_placeholder() {
             )),
             UnnamedExpr(Expr::Value(
                 (Value::Placeholder("?123".into())).with_empty_span()
+            )),
+            UnnamedExpr(Expr::Value(
+                (Value::Placeholder("${placeholder}".into())).with_empty_span()
             )),
         ]
     );
