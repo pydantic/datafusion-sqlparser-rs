@@ -366,6 +366,11 @@ pub trait Dialect: Debug + Any {
         false
     }
 
+    /// Returns true if CTEs support `AS MATERIALIZED` and `AS NOT MATERIALIZED`.
+    fn supports_cte_materialization(&self) -> bool {
+        false
+    }
+
     /// Returns true if the dialects supports `group sets, roll up, or cube` expressions.
     fn supports_group_by_expr(&self) -> bool {
         false

@@ -18854,3 +18854,49 @@ fn parse_non_pg_dialects_keep_xml_names_as_regular_identifiers() {
     let dialects = all_dialects_except(|d| d.supports_xml_expressions());
     dialects.verified_only_select("SELECT xml FROM t");
 }
+
+#[test]
+fn parse_cte_materialization_capability() {
+    #[derive(Debug)]
+    struct MaterializedDialect;
+
+    impl Dialect for MaterializedDialect {
+        fn is_identifier_start(&self, ch: char) -> bool {
+            GenericDialect {}.is_identifier_start(ch)
+        }
+
+        fn is_identifier_part(&self, ch: char) -> bool {
+            GenericDialect {}.is_identifier_part(ch)
+        }
+
+        fn supports_cte_materialization(&self) -> bool {
+            true
+        }
+    }
+
+    for (directive, expected) in [
+        ("", None),
+        ("MATERIALIZED ", Some(CteAsMaterialized::Materialized)),
+        (
+            "NOT MATERIALIZED ",
+            Some(CteAsMaterialized::NotMaterialized),
+        ),
+    ] {
+        let sql = format!("WITH c AS {directive}(SELECT 1) SELECT * FROM c");
+        for dialect in [&MaterializedDialect as &dyn Dialect, &PostgreSqlDialect {}] {
+            let statements = Parser::parse_sql(dialect, &sql).unwrap();
+            assert_eq!(statements[0].to_string(), sql);
+            let Statement::Query(query) = &statements[0] else {
+                panic!("expected query");
+            };
+            assert_eq!(
+                query.with.as_ref().unwrap().cte_tables[0].materialized,
+                expected
+            );
+        }
+        assert_eq!(
+            Parser::parse_sql(&GenericDialect {}, &sql).is_ok(),
+            expected.is_none()
+        );
+    }
+}
