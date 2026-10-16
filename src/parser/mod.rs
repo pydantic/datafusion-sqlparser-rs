@@ -4744,7 +4744,7 @@ impl<'a> Parser<'a> {
         if self.parse_keyword(expected) {
             Ok(self.get_current_token().clone())
         } else {
-            self.expected_ref(format!("{:?}", &expected).as_str(), self.peek_token_ref())
+            self.expected_ref(format!("{:?}", expected).as_str(), self.peek_token_ref())
         }
     }
 
@@ -4757,7 +4757,7 @@ impl<'a> Parser<'a> {
         if self.parse_keyword(expected) {
             Ok(())
         } else {
-            self.expected_ref(format!("{:?}", &expected).as_str(), self.peek_token_ref())
+            self.expected_ref(format!("{:?}", expected).as_str(), self.peek_token_ref())
         }
     }
 
@@ -13335,7 +13335,7 @@ impl<'a> Parser<'a> {
                 token => {
                     return Err(ParserError::ParserError(format!(
                         "Unexpected token in identifier: {token}"
-                    )))?;
+                    )));
                 }
             }
         }
@@ -14528,7 +14528,7 @@ impl<'a> Parser<'a> {
         };
 
         let mut is_materialized = None;
-        if dialect_of!(self is PostgreSqlDialect) {
+        if self.dialect.supports_cte_materialization() {
             if self.parse_keyword(Keyword::MATERIALIZED) {
                 is_materialized = Some(CteAsMaterialized::Materialized);
             } else if self.parse_keywords(&[Keyword::NOT, Keyword::MATERIALIZED]) {
@@ -16598,7 +16598,7 @@ impl<'a> Parser<'a> {
                         tok.token
                     ),
                     tok.span.start
-                )?;
+                );
             }
         }
 
